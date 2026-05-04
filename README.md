@@ -52,7 +52,8 @@ git --version
 > **Screenshot 1:** Take a screenshot of your terminal showing both version
 > checks and insert it here.
 >
-> `[insert screenshot]`
+> <img width="726" height="243" alt="1" src="https://github.com/user-attachments/assets/df100c47-adb8-4ce0-86a8-3046d078e14b" />
+
 
 ---
 
@@ -175,14 +176,14 @@ Complete the sketch for all six relations (`author`, `book`, `writes`, `copy`,
 > relational model? What would go wrong if you stored multiple author IDs in a
 > single column of `book`?
 >
-> *Your answer:*
+> Relational databases require atomic values, and storing multiple IDs in one cell violates the First Normal Form (1NF).
 
 > **Question 1.2:** `loan_id` is a surrogate key even though a loan might seem
 > to be uniquely identified by `(member_no, copy_no, loan_date)`. Name one
 > realistic scenario in which that composite key would fail to be a candidate
 > key.
 >
-> *Your answer:*
+> The composite key would fail if a member borrows, returns, and then re-borrows the exact same copy on the same day.
 
 ---
 
@@ -293,7 +294,8 @@ sqlite3 library.db < schema.sql
 > **Screenshot 2:** Take a screenshot of the terminal showing the `.tables`
 > output and insert it here.
 >
-> `[insert screenshot]`
+> img width="721" height="90" alt="2" src="https://github.com/user-attachments/assets/85706236-077c-4b30-93e7-4606495bf50f" />
+
 
 ### Task 2c – Commit
 
@@ -346,12 +348,12 @@ git log --oneline
 `writes`. What does this mean in practice if a librarian wants to delete an
 author who has written at least one book in the catalogue?
 
-> *Your answer:*
+> The database will block the deletion and return an error message, preventing the librarian from removing the author.
 
 **Question 2.2:** `email` in `member` is declared `UNIQUE` but is not the
 primary key. Using the vocabulary from Lecture 03, what kind of key is it?
 
-> *Your answer:*
+> a candidate key
 
 **Question 2.3:** SQLite does not enforce `CHECK` or `FOREIGN KEY` constraints
 by default. Run the following and observe what happens:
@@ -374,7 +376,7 @@ by default. Run the following and observe what happens:
 > the difference between a constraint declared in DDL and one actually enforced
 > at runtime?
 
-> *Your answer:*
+> You get a bash command error because you are typing SQL commands directly into the Linux terminal instead of inside the SQLite prompt.
 
 ---
 
@@ -469,7 +471,9 @@ $$\sigma_{\mathrm{shelf\_loc}\ \mathrm{LIKE}\ \texttt{'A\%'}}(\textsc{copy})$$
 SQL:
 
 ```sql
--- write your query here
+-- SELECT * 
+FROM copy 
+WHERE shelf_loc LIKE 'A%';
 ```
 
 > Expected result: copy\_no 1 and 2.
@@ -484,7 +488,8 @@ $$\pi_{\mathrm{title},\,\mathrm{pub\_year}}(\textsc{book})$$
 SQL:
 
 ```sql
--- write your query here
+-- SELECT title, pub_year 
+FROM book;
 ```
 
 > Expected result: three rows, two columns each.
@@ -500,7 +505,9 @@ $$\pi_{\mathrm{isbn},\,\mathrm{shelf\_loc}}\!\left(\sigma_{\mathrm{shelf\_loc} \
 SQL:
 
 ```sql
--- write your query here
+-- SELECT isbn, shelf_loc 
+FROM copy 
+WHERE shelf_loc >= 'B';
 ```
 
 > Expected result: copy\_no 3 (B-07) and copy\_no 4 (C-12).
@@ -521,7 +528,12 @@ $$\pi_{\mathrm{full\_name},\,\mathrm{title}}\!\left(
 SQL:
 
 ```sql
--- write your query here
+-- SELECT m.full_name, b.title
+FROM loan l
+JOIN member m ON l.member_no = m.member_no
+JOIN copy c ON l.copy_no = c.copy_no
+JOIN book b ON c.isbn = b.isbn
+WHERE l.return_date IS NULL;
 ```
 
 > Expected result: two rows – Schneider borrowing *Database Management Systems*,
@@ -551,7 +563,7 @@ not in a `WHERE` clause. What would happen to Koch's row if you moved this
 condition into `WHERE return_date IS NULL`? Why? Refer to the formal definition
 of the outer join from Lecture 03.
 
-> *Your answer:*
+> Koch's row would disappear from the results.
 
 ### Task 4f – Set Difference
 
@@ -565,7 +577,11 @@ $$\pi_{\mathrm{isbn}}(\textsc{book}) - \pi_{\mathrm{isbn}}\!\left(\textsc{copy} 
 In SQL, set difference is expressed with `EXCEPT`:
 
 ```sql
--- write your query here
+-- SELECT isbn FROM book
+EXCEPT
+SELECT c.isbn 
+FROM copy c 
+JOIN loan l ON c.copy_no = l.copy_no;
 ```
 
 > Expected result: *The C Programming Language* (copy 4 was never loaned).
@@ -599,7 +615,7 @@ VALUES (999, 1, '2026-05-01');
 > **Question 5.1:** Which specific constraint fired? Name the table and the
 > foreign key column involved.
 >
-> *Your answer:*
+> The constraint that fired is the Foreign Key Constraint defined in the loan table.
 
 ### Task 5b – Delete a member with active loans
 
@@ -615,7 +631,11 @@ DELETE FROM member WHERE member_no = 102;
 > `DELETE`. What happens to Schneider's loan row? Is this behaviour desirable
 > for a library system? Justify your answer.
 >
-> *Your answer:*
+> Result: Schneider’s loan rows will be automatically deleted along with his member record.
+
+Is it desirable? No.
+
+Justification: Using CASCADE causes the library to lose all accountability. If a member is deleted, the library loses the only record of which physical books that person still has in their possession. It also wipes out historical borrowing data needed for library records. Using RESTRICT is better because it prevents deleting a member who still has active business with the library.
 
 ### Task 5c – Verify the composite primary key of `writes`
 
@@ -629,7 +649,10 @@ INSERT INTO writes VALUES (1, '978-0-201-96426-4');
 > here – but also a *primary key*. Can a relation have two candidate keys? Give
 > an example from the library schema.
 >
-> *Your answer:*
+> Yes, a relation can have multiple candidate keys.
+ Example
+ member_no is the Primary Key.
+ full_name (or an email address, if present) could be a Candidate Key if the library ensures that no two people share the same name.
 
 ---
 
@@ -734,7 +757,7 @@ If you have not used `scp` before, work through this exercise first:
 > **Screenshot 3:** Take a screenshot of `schema.svg` showing all six entities
 > and all five relationships, and insert it here.
 >
-> `[insert screenshot]`
+> <img width="640" height="611" alt="3" src="https://github.com/user-attachments/assets/220fcf4b-dc2b-4374-802f-2e018d5b6a34" />
 
 Add `schema.svg` to `.gitignore` (it is generated, not authored):
 
@@ -778,7 +801,9 @@ joins. SQL does not prescribe an execution order; the query optimizer may
 reorder these joins freely. Under what condition would reordering a join change
 the *result* of a query? Under what condition is it always safe?
 
-> *Your answer:*
+> It is always safe for Inner Joins because they are commutative.
+
+Result Change: It changes for Outer Joins (LEFT/RIGHT) because the order determines which unmatched data is kept.
 
 **Question B – NULL semantics:**  
 `return_date` is `NULL` for an open loan. `NULL` in SQL does not mean zero or
@@ -786,7 +811,11 @@ false – it means *unknown*. Consider the query `WHERE return_date = NULL`.
 Will it return the open loans? Explain why or why not and write the correct
 form.
 
-> *Your answer:*
+> Answer: No.
+
+Reason: In SQL, x = NULL is UNKNOWN. To find open loans, you must use IS NULL.
+
+Correct Form: WHERE return_date IS NULL;
 
 **Question C – Surrogate vs. natural key:**  
 `book` uses `isbn` as its natural primary key; all other entities use surrogate
@@ -794,7 +823,9 @@ integer keys. Suppose the library occasionally receives books without an ISBN
 (unpublished manuscripts, internal reports). How would this affect the `isbn`
 primary key? What design change would you make?
 
-> *Your answer:*
+> Effect: You couldn't add books without ISBNs because Primary Keys cannot be NULL.
+
+Change: Use a Surrogate Key (Auto-incrementing ID) as the PK and make isbn a regular column.
 
 **Question D – Relational algebra limitations:**  
 Suppose the library wants to find all members who have borrowed the same copy
@@ -804,12 +835,12 @@ operators of the relational algebra (σ, π, ρ, ×, −) without aggregation?
 What does this tell you about the relationship between relational algebra and
 SQL?
 
-> *Your answer:*
+> SQL: SELECT member_no, copy_no FROM loan GROUP BY member_no, copy_no HAVING COUNT(*) > 1;
 
 > **Screenshot 4:** Take a screenshot of your terminal showing the output of
 > the query from Task 4d (the join across four relations), and insert it here.
 >
-> `[insert screenshot]`
+> <img width="450" height="73" alt="4" src="https://github.com/user-attachments/assets/f1102c66-dab2-404b-a784-34d0124484fa" />
 
 ---
 
