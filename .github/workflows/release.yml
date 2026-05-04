@@ -1,6 +1,8 @@
 name: Release Diagram
 on:
   push:
+    branches:
+      - master
     tags:
       - 'v*'
 
@@ -15,23 +17,6 @@ jobs:
         run: plantuml -tsvg schema.puml
       - name: Release
         uses: softprops/action-gh-release@v1
-        with:
-          files: schema.svgname: Release Diagram
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install PlantUML
-        run: sudo apt-get install -y plantuml
-      - name: Render Diagram
-        run: plantuml -tsvg schema.puml
-      - name: Release
-        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: schema.svg
